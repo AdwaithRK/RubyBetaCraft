@@ -1,3 +1,5 @@
+require 'pry'
+
 $price = [{item: "Banana", price: 0.99, sale: {}},
          {item: "Bread", price: 2.17, sale: {quantity: 3, offer_price: 6.00}},
          {item: "Apple", price: 0.89, sale: {}},
@@ -14,11 +16,12 @@ end
 
 def get_discounted_and_not_discounted_quantity(item_price, item_count)
     discount_item = 0
-    offer_count = item_price.sale.quantity
-    while(offer_count < item_count)
+    offer_count = item_price[:sale][:quantity]
+    while(offer_count <= item_count)
         item_count = item_count - offer_count 
         discount_item += 1
     end
+    return {discounted: discount_item, non_discounted: item_count}
 end
 
 def count_words(string)
@@ -29,24 +32,48 @@ def count_words(string)
 end
 
 def get_price(items)
+    display_list = []
     items = count_words(items)
-    total_price = 0
-    total_discounted_price = 0
+    total_price = 0.0
+    total_discounted_price = 0.0
+    item_total_real_price = 0.0
+    item_discounted_price = 0.0
     items.each do |x|
+        item_display = {}
+        item_display[:name] = x[0]
+        item_display[:quantity] = x[1]
         item_price = get_item_price(x[0])
-        item_total_real_price = item_price[:price] * x[1];
-        if(item_price[:sale].not_empty?)
-            
+        item_total_real_price = item_price[:price] * x[1]
+        if(!item_price[:sale]&.empty?)
+            item_prices = get_discounted_and_not_discounted_quantity(item_price, x[1])
+            item_discounted_price = item_prices[:discounted] * item_price[:sale][:offer_price] + item_prices[:non_discounted] * item_price[:price]
+        else
+            item_discounted_price = item_total_real_price
         end
+        item_display[:price] = item_discounted_price
+        total_discounted_price += item_discounted_price
+        total_price += item_total_real_price
+
+        display_list.push(item_display)
+    end
+    display_price(display_list,  total_price, total_discounted_price)
+end
+
+def display_price(display_list, total_price, total_discounted_price)
+    print "\n\nItem\t\tQuantity\t\tPrice\n\n"
+    print "---------------------------------------------------\n\n"
+    display_list.each do |item|
+        print "#{item[:name].capitalize}\t\t#{item[:quantity]}\t\t#{item[:price]}\n\n"
+    end
+
+    print "Total price : $#{total_discounted_price}\n"
+    if(total_price - total_discounted_price)
+        print "You saved $#{total_price - total_discounted_price} today.\n"
     end
 end
 
-def total_price()
-
-end
-
 def collect_data
-    p "Please enter all the items purchased separated by a comma"
+    print "Please enter all the items purchased separated by a comma\n"
     items = gets
 
     get_price(items)
