@@ -13,24 +13,38 @@ class CalculatePrice
         @item_discounted_price = 0.0
     end
 
+    def collect_data
+        print "Please enter all the items purchased separated by a comma\n"
+        items = gets
+        get_price(items)
+    end
+
+    private
+
+    def build_display_item(item, item_discounted_price)
+        {name: item[0], quantity: item[1], price: item_discounted_price}
+    end
+
+    def get_discounted_and_not_discounted_price(item)
+        item_price = get_item_price(item[0])
+        @item_total_real_price = item_price[:price] * item[1]
+        # Here if sale is available we compute the amount of discounted and non discounted quantity
+        if(!item_price[:sale]&.empty?)
+            item_prices = get_discounted_and_not_discounted_quantity(item_price, item[1])
+            #simple addition to find to price with discounted quantity and non discounted quantity
+            @item_discounted_price = item_prices[:discounted] * item_price[:sale][:offer_price] + item_prices[:non_discounted] * item_price[:price]
+        else
+            @item_discounted_price = @item_total_real_price
+        end
+        build_display_item(item, @item_discounted_price)
+    end
+
     def get_price(items)
         display_list = []
         items = count_items(items)
         #Iterating over items to find price
-        items.each do |x|
-            item_display = {}
-            item_display[:name] = x[0]
-            item_display[:quantity] = x[1]
-            item_price = get_item_price(x[0])
-            @item_total_real_price = item_price[:price] * x[1]
-            # Here if sale is available we compute the amount of discounted and non discounted quantity
-            if(!item_price[:sale]&.empty?)
-                item_prices = get_discounted_and_not_discounted_quantity(item_price, x[1])
-                @item_discounted_price = item_prices[:discounted] * item_price[:sale][:offer_price] + item_prices[:non_discounted] * item_price[:price]
-            else
-                @item_discounted_price = @item_total_real_price
-            end
-            item_display[:price] = @item_discounted_price
+        items.each do |item|
+            item_display = get_discounted_and_not_discounted_price(item)
             # Here total discounted price is price with discount. total_discounted_price = total_price if no discount is available
             @total_discounted_price += @item_discounted_price
             @total_price += @item_total_real_price
@@ -79,12 +93,6 @@ class CalculatePrice
             print "You saved $#{(total_price - total_discounted_price).round(2)} today.\n"
         end
     end
-
-    def collect_data
-        print "Please enter all the items purchased separated by a comma\n"
-        items = gets
-        get_price(items)
-    end 
 end
 
 
