@@ -1,5 +1,7 @@
 # RubyBetaCraft
 
+Run the solution using **ruby calculate_price.rb**
+
 ## Sale Discount for a store
 
 At the grocery store items are sold by quantity. For example Milk costs $3.97. However sometimes there is a sale and then consumers can buy n items for the a special price. 
