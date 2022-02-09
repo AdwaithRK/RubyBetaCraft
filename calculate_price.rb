@@ -1,29 +1,32 @@
-require 'pry'
+require_relative "miscellaneous"
 
 class CalculatePrice
-    @@price = [{item: "Banana", price: 0.99, sale: {}},
-        {item: "Bread", price: 2.17, sale: {quantity: 3, offer_price: 6.00}},
-        {item: "Apple", price: 0.89, sale: {}},
-        { item: "Milk", price: 3.97, sale: {quantity: 2, offer_price: 5.00}}  ]
+
+    include Miscellaneous
 
     def initialize()
         @total_price = 0.0
         @total_discounted_price = 0.0
         @item_total_real_price = 0.0
         @item_discounted_price = 0.0
+        @items = ""
+        @item_list = []
     end
 
     def collect_data
         print "Please enter all the items purchased separated by a comma\n"
-        items = gets
-        get_price(items)
+        @items = gets
+    end
+
+    def calculate_price
+        get_price(@items)
+    end
+
+    def display_price_list
+        display_price(@item_list,  @total_price, @total_discounted_price)
     end
 
     private
-
-    def build_display_item(item, item_discounted_price)
-        {name: item[0], quantity: item[1], price: item_discounted_price}
-    end
 
     def get_discounted_and_not_discounted_price(item)
         item_price = get_item_price(item[0])
@@ -36,30 +39,21 @@ class CalculatePrice
         else
             @item_discounted_price = @item_total_real_price
         end
-        build_display_item(item, @item_discounted_price)
+        #miscellaneous function to give item price in format {name:, quantity:, price:}
+        build_item_price(item, @item_discounted_price)
     end
 
     def get_price(items)
-        display_list = []
         items = count_items(items)
         #Iterating over items to find price
         items.each do |item|
-            item_display = get_discounted_and_not_discounted_price(item)
+            item_price = get_discounted_and_not_discounted_price(item)
             # Here total discounted price is price with discount. total_discounted_price = total_price if no discount is available
             @total_discounted_price += @item_discounted_price
             @total_price += @item_total_real_price
-            display_list.push(item_display)
+            @item_list.push(item_price)
         end
-        # Display the result in desired format
-        display_price(display_list,  @total_price, @total_discounted_price)
-    end
-
-    def price_sale
-        @@price.map{|x| x[:item]}.map(&:downcase)
-    end
-    
-    def get_item_price(item)
-        @@price.select{|x| x[:item].downcase == item.downcase}.first
+        @item_list
     end
     
     def get_discounted_and_not_discounted_quantity(item_price, item_count)
@@ -73,26 +67,6 @@ class CalculatePrice
         {discounted: discount_item, non_discounted: item_count}
     end
     
-    def count_items(string)
-        # Count items by splitting w.r.t comma(,) and filter out items not in the static list
-        words = string.split(",").map(&:strip).map(&:downcase).select{|x| price_sale.include?(x) }
-        frequency = Hash.new(0)
-        words.each { |word| frequency[word.downcase] += 1 }
-        frequency
-    end
-
-    def display_price(display_list, total_price, total_discounted_price)
-        print "\n\nItem\t\tQuantity\t\tPrice\n\n"
-        print "---------------------------------------------------\n\n"
-        display_list.each do |item|
-            print "#{item[:name].capitalize}\t\t#{item[:quantity]}\t\t#{item[:price]}\n\n"
-        end
-        # we find the difference b/w price without discount i.e total price and total discounted price to find savings 
-        print "Total price : $#{total_discounted_price}\n"
-        if(total_price - total_discounted_price)
-            print "You saved $#{(total_price - total_discounted_price).round(2)} today.\n"
-        end
-    end
 end
 
 
@@ -100,6 +74,7 @@ calculate_price = CalculatePrice. new
 
 calculate_price.collect_data
 
+calculate_price.calculate_price
 
-
+calculate_price.display_price_list
 
